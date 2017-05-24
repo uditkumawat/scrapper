@@ -3,6 +3,7 @@
 const fs = require('fs');
 const request = require('request');
 const urlRegex = require('url-regex');
+const async = require('async');
 
 class Scrapper {
 
@@ -11,12 +12,35 @@ class Scrapper {
         this.temp = [];
     }
 
-    init(callback){
+    getUrls(url,cb){
+
+        request(url,function(error,response,body){
+
+            if(response && response.statusCode==200)
+            {
+
+
+            }
+
+            cb();
+        });
+    }
+
+    startProcess(data){
+
+        async.map(data,this.getUrls,function(error,urls){
+
+        })
+
+    }
+
+
+    initial(callback){
 
         request('http://www.google.com', function (error, response, body) {
 
             if(error)
-                callback(error,null);
+                callback(error);
             else if(response && response.statusCode==200) {
 
                 this.temp = body.match(urlRegex());
@@ -27,27 +51,23 @@ class Scrapper {
 
                 });
 
-                callback(null,this.temp.length);
+                callback(null,this.temp);
             }
         });
     }
 
-    startProcess(){
-
-
-
-    }
 }
 
 const scrap = new Scrapper();
 
-scrap.init(function(error,bool){
+scrap.initial(function(error,data){
 
     if(error){
         console.log("Error in request module");
         process.exit(0);
     }
-    else if(bool) {
-        scrap.startProcess();
+    else if(data) {
+        scrap.startProcess(data);
+        console.log("Scrapping done");
     }
 });
