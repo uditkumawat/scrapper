@@ -13,7 +13,7 @@ class Scrapper {
 
     init(callback){
 
-        request('http://www.medium.com', function (error, response, body) {
+        request('http://www.google.com', function (error, response, body) {
 
             if(error)
                 callback(error,null);
