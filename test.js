@@ -1,194 +1,77 @@
 "use strict";
 
-let request = require('request');
-let async = require('async');
+let https = require('https');
 let fs = require('fs');
 let urlRegex = require('url-regex');
 
+let urls = ['https://medium.com'];
 
-let urls = ['https://medium.com/'];
+let url = null;
 
-function crawl(){
+let totalURLToTraverse = 10000;                 //setting a limit to traverse (depth)
+let indexingURL=0;
+
+function getUrl(){
+
+    indexingURL++;
     
-    async.parallel([
-        
-        function(cb){
-          
-            let url = null;
-            url = urls.shift();
-            
-            if(url!=null) {
-             
-                request(url, function (error, response, body) {
-                    
-                    if(response && response.statusCode==200){
-                        
-                        let urlsFromThisPage = body.match(urlRegex());
+    if(indexingURL>totalURLToTraverse)
+        return;
+    
+    //remove first element (URL) from array and store in variable for further processing
+    
+    url = urls.shift();                 
 
-                        urls = urls.concat(body.match(urlRegex()));
+    try
+    {
+        https.get(url, function (response) {
 
-                        urls = [...new Set(urls)];
+            let htmlBody = '';
 
-                        if(urlsFromThisPage!=null && url!=null) {
-                            
-                            fs.appendFile('urls.csv', urlsFromThisPage, function () {
+            response.on('data', function (d) {
+                if (response.statusCode == 200)
+                    htmlBody += d;
+            });
 
-                            });
-                        }
+            response.on('end', function () {
 
-                    }
-                    
-                    cb();
-                });
+                let urlsFromThisPage = htmlBody.match(urlRegex());
+
+                urls = urls.concat(htmlBody.match(urlRegex()));
+
+                urls = [...new Set(urls)];
+
+                if(urlsFromThisPage!=null && url!=null) {
+
+                    fs.appendFile('urls.csv', urlsFromThisPage, function () {
+
+                    });
+                }
+
+                if (urls.length != 0) {
+                    getUrl();
+                }
+            });
+
+        }).on("error", function (error) {
+
+            if (error) {
+                console.log(error);
+                getUrl();
             }
-            else{
-                cb();
-            }
-        },
-        function(cb){
+        });
+    }
+    catch(e){
 
-            let url = null;
-            url = urls.shift();
-
-            if(url!=null) {
-
-                request(url, function (error, response, body) {
-
-                    if(response && response.statusCode==200){
-
-                        let urlsFromThisPage = body.match(urlRegex());
-
-                        urls = urls.concat(body.match(urlRegex()));
-
-                        urls = [...new Set(urls)];
-
-                        if(urlsFromThisPage!=null && url!=null) {
-
-
-                            fs.appendFile('urls.csv', urlsFromThisPage, function () {
-
-                            });
-                        }
-
-                    }
-
-                    cb();
-                });
-            }
-            else{
-                cb();
-            }
-        },
-        function(cb){
-
-            let url = null;
-            url = urls.shift();
-
-            if(url!=null) {
-
-                request(url, function (error, response, body) {
-
-                    if(response && response.statusCode==200){
-
-                        let urlsFromThisPage = body.match(urlRegex());
-
-                        urls = urls.concat(body.match(urlRegex()));
-
-                        urls = [...new Set(urls)];
-
-                        if(urlsFromThisPage!=null && url!=null) {
-
-
-                            fs.appendFile('urls.csv', urlsFromThisPage, function () {
-
-                            });
-                        }
-
-                    }
-
-                    cb();
-                });
-            }
-            else{
-                cb();
-            }
-        },
-        function(cb){
-
-            let url = null;
-            url = urls.shift();
-
-            if(url!=null) {
-
-                request(url, function (error, response, body) {
-
-                    if(response && response.statusCode==200){
-
-                        let urlsFromThisPage = body.match(urlRegex());
-
-                        urls = urls.concat(body.match(urlRegex()));
-
-                        urls = [...new Set(urls)];
-
-                        if(urlsFromThisPage!=null && url!=null) {
-
-
-                            fs.appendFile('urls.csv', urlsFromThisPage, function () {
-
-                            });
-                        }
-
-                    }
-
-                    cb();
-                });
-            }
-            else{
-                cb();
-            }
-        },
-        function(cb){
-
-            let url = null;
-            url = urls.shift();
-
-            if(url!=null) {
-
-                request(url, function (error, response, body) {
-
-                    if(response && response.statusCode==200){
-
-                        let urlsFromThisPage = body.match(urlRegex());
-
-                        urls = urls.concat(body.match(urlRegex()));
-
-                        urls = [...new Set(urls)];
-
-                        if(urlsFromThisPage!=null && url!=null) {
-                            
-                            fs.appendFile('urls.csv', urlsFromThisPage, function () {
-
-                            });
-                        }
-
-                    }
-
-                    cb();
-                });
-            }
-            else{
-                cb();
-            }
-        }
-    ],function(error,result){
-       
-        if(urls.length>0){
-            crawl();
-        }
-        else{
-            return;
-        }
-    });
+        console.log(e);
+        getUrl();
+    }
 }
 
-crawl();
+// 5 concurrent request
+
+for(let i=0;i<5;i++)
+{
+    console.log("called ",i);
+    getUrl();
+}
