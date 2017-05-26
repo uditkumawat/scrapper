@@ -18,7 +18,7 @@ class Scrapper {
 
             if(response && response.statusCode==200)
             {
-
+                    
 
             }
 
@@ -29,7 +29,7 @@ class Scrapper {
     startProcess(data){
 
         async.map(data,this.getUrls,function(error,urls){
-
+                
         })
 
     }
@@ -58,6 +58,7 @@ class Scrapper {
 
 }
 
+
 const scrap = new Scrapper();
 
 scrap.initial(function(error,data){
@@ -71,3 +72,5 @@ scrap.initial(function(error,data){
         console.log("Scrapping done");
     }
 });
+
+    

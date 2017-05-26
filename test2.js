@@ -4,7 +4,7 @@ let http = require('http');
 let fs = require('fs');
 let urlRegex = require('url-regex');
 
-let urls = ['www.google.com'];
+let urls = ['http://www.google.com'];
 
 let url = null;
 
