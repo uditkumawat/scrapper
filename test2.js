@@ -1,10 +1,10 @@
 "use strict";
 
-let http = require('http');
+let https = require('https');
 let fs = require('fs');
 let urlRegex = require('url-regex');
 
-let urls = ['http://www.google.com'];
+let urls = ['https://medium.com'];
 
 let url = null;
 
@@ -22,9 +22,9 @@ function getUrl(){
     
     url = urls.shift();                 
 
-    try 
+    try
     {
-        http.get(url, function (response) {
+        https.get(url, function (response) {
 
             let htmlBody = '';
 
@@ -40,12 +40,10 @@ function getUrl(){
                 urls = urls.concat(htmlBody.match(urlRegex()));
 
                 urls = [...new Set(urls)];
-                
+
                 if(urlsFromThisPage!=null && url!=null) {
 
-                    let stringToSave = "URL - >"+url+"\nIts urls inside page -- >\n"+urlsFromThisPage+"\n\n";
-
-                    fs.appendFile('urls.csv', stringToSave, function () {
+                    fs.appendFile('urls.csv', urlsFromThisPage, function () {
 
                     });
                 }
@@ -70,7 +68,7 @@ function getUrl(){
     }
 }
 
-// concurrent request
+// 5 concurrent request
 
 for(let i=0;i<5;i++)
 {
