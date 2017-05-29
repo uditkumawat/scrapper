@@ -1,14 +1,14 @@
 "use strict";
 
-let https = require('https');
-let fs = require('fs');
-let urlRegex = require('url-regex');
+const request = require('request');
+const fs = require('fs');
+const urlRegex = require('url-regex');
 
 let urls = ['https://medium.com'];
 
 let url = null;
 
-let totalURLToTraverse = 10000;                 //setting a limit to traverse (depth)
+let totalURLToTraverse = 10000000;                 //setting a limit to traverse (depth)
 let indexingURL=0;
 
 function getUrl(){
@@ -20,51 +20,29 @@ function getUrl(){
     
     //remove first element (URL) from array and store in variable for further processing
     
-    url = urls.shift();                 
+    url = urls.shift();
 
-    try
-    {
-        https.get(url, function (response) {
 
-            let htmlBody = '';
+    if(url!=undefined && url!=null) {
+     
+        request(url, function (error, response, body) {
 
-            response.on('data', function (d) {
-                if (response.statusCode == 200)
-                    htmlBody += d;
-            });
+            if (response && response.statusCode == 200) {
 
-            response.on('end', function () {
+                let urlsFromThisPage = body.match(urlRegex());
 
-                let urlsFromThisPage = htmlBody.match(urlRegex());
-
-                urls = urls.concat(htmlBody.match(urlRegex()));
+                urls = urls.concat(body.match(urlRegex()));
 
                 urls = [...new Set(urls)];
 
-                if(urlsFromThisPage!=null && url!=null) {
+                //asynchronously add these urls in csv file
+                fs.appendFile('urls.csv', urlsFromThisPage, function () {
 
-                    fs.appendFile('urls.csv', urlsFromThisPage, function () {
+                });
 
-                    });
-                }
-
-                if (urls.length != 0) {
-                    getUrl();
-                }
-            });
-
-        }).on("error", function (error) {
-
-            if (error) {
-                console.log(error);
                 getUrl();
             }
         });
-    }
-    catch(e){
-
-        console.log(e);
-        getUrl();
     }
 }
 
@@ -72,6 +50,5 @@ function getUrl(){
 
 for(let i=0;i<5;i++)
 {
-    console.log("called ",i);
     getUrl();
 }
